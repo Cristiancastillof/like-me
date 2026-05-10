@@ -18,6 +18,7 @@ const pool = new Pool({
   allowExitOnIdle: true,
 });
 
+// GET: obtener todos los posts
 app.get("/posts", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM posts ORDER BY id DESC");
@@ -28,6 +29,7 @@ app.get("/posts", async (req, res) => {
   }
 });
 
+// POST: crear un nuevo post
 app.post("/posts", async (req, res) => {
   try {
     const { titulo, img, descripcion } = req.body;
@@ -39,13 +41,56 @@ app.post("/posts", async (req, res) => {
     `;
 
     const values = [titulo, img, descripcion];
-
     const result = await pool.query(query, values);
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al crear el post" });
+  }
+});
+
+// PUT: sumar like a un post
+app.put("/posts/like/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = `
+      UPDATE posts
+      SET likes = likes + 1
+      WHERE id = $1
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Post no encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al dar like al post" });
+  }
+});
+
+// DELETE: eliminar un post
+app.delete("/posts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = "DELETE FROM posts WHERE id = $1 RETURNING *";
+    const result = await pool.query(query, [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Post no encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al eliminar el post" });
   }
 });
 

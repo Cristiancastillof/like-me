@@ -27,15 +27,35 @@ const App = () => {
     });
 
     const post = await response.json();
-    setTodos([...todos, post]);
+    setTodos([post, ...todos]);
   };
 
-  const removeTodo = async () => {
-    alert("Eliminar no corresponde a la Parte I");
+  const removeTodo = async (id) => {
+    const response = await fetch(`http://localhost:3000/posts/${id}`, {
+      method: "DELETE",
+    });
+
+    if (response.status !== 200) {
+      return alert("Error al eliminar");
+    }
+
+    setTodos(todos.filter((todo) => todo.id !== id));
   };
 
-  const updateTodo = async () => {
-    alert("Likes no corresponde a la Parte I");
+  const updateTodo = async (id) => {
+    const response = await fetch(`http://localhost:3000/posts/like/${id}`, {
+      method: "PUT",
+    });
+
+    if (response.status !== 200) {
+      return alert("Error al dar like");
+    }
+
+    const updatedPost = await response.json();
+
+    setTodos(
+      todos.map((todo) => (todo.id === id ? updatedPost : todo))
+    );
   };
 
   return (
